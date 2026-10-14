@@ -2,18 +2,48 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const desktop = window.matchMedia("(min-width: 1024px)");
 
-  // ---------- Top nav: hairline once the page has scrolled ----------
-  const topNav = document.querySelector(".top-nav");
-  if (topNav) {
-    let scrolled = null;
-    const onScroll = () => {
-      const next = window.scrollY > 4;
-      if (next === scrolled) return;
-      scrolled = next;
-      topNav.toggleAttribute("data-scrolled", next);
+  // ---------- Top nav: "ekbekar." menu + back-to-top with scroll progress ----------
+  const siteNav = document.querySelector("[data-nav]");
+  if (siteNav) {
+    const toggle = siteNav.querySelector(".nav-toggle");
+    const toTop = siteNav.querySelector(".nav-top");
+    const bar = siteNav.querySelector(".nav-progress .bar");
+
+    const setOpen = (open) => {
+      siteNav.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
     };
+    toggle.addEventListener("click", () => setOpen(!siteNav.classList.contains("is-open")));
+    document.addEventListener("click", (e) => { if (!siteNav.contains(e.target)) setOpen(false); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && siteNav.classList.contains("is-open")) { setOpen(false); toggle.focus(); }
+    });
+    siteNav.querySelectorAll(".nav-menu a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+
+    // Progress: 0 at the top, 1 at the bottom. The arrow appears once the page has scrolled.
+    let ticking = false;
+    let shown = null;
+    const update = () => {
+      ticking = false;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+      bar.style.strokeDashoffset = String(100 - p * 100);
+      const show = window.scrollY > 24;
+      if (show !== shown) {
+        shown = show;
+        siteNav.classList.toggle("is-scrolled", show);
+        toTop.tabIndex = show ? 0 : -1;
+      }
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
+    window.addEventListener("resize", onScroll);
+    update();
+
+    toTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      toggle.focus({ preventScroll: true });
+    });
   }
 
   // ---------- Hero: split text into words for the blur-in (photos keep their own pop-in) ----------
@@ -158,16 +188,6 @@
     reveals.forEach((el) => el.setAttribute("data-visible", ""));
   }
 
-  // ---------- Top nav "Works" selected while the works section is on screen ----------
-  const worksSection = document.getElementById("works");
-  const worksLink = document.querySelector('[data-menu="works"]');
-  if (worksSection && worksLink && "IntersectionObserver" in window) {
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) worksLink.setAttribute("aria-current", "page");
-      else worksLink.removeAttribute("aria-current");
-    }, { rootMargin: "-50% 0px -50% 0px" }).observe(worksSection);
-  }
-
   function renderWorks(listEl, navEl, projects) {
     const icon = (p) => `assets/icons/${p.id}.svg`;
     const iconXs = (p) => `assets/icons/${p.id}-xs.svg`;
@@ -236,7 +256,7 @@
         </figure>`).join("");
 
       return `
-        <article id="${p.id}" data-project class="flex scroll-mt-[176px] flex-col gap-4 lg:scroll-mt-[120px] lg:gap-6" aria-label="${p.name}">
+        <article id="${p.id}" data-project class="flex scroll-mt-[152px] flex-col gap-4 lg:scroll-mt-20 lg:gap-6" aria-label="${p.name}">
           <div class="reveal">${cover}</div>
           ${assets}
         </article>`;
