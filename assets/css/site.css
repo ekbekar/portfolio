@@ -1,0 +1,269 @@
+/* ---------- Fonts ---------- */
+/* OffBit is not on a public CDN. Drop OffBit-Bold.woff2 into assets/fonts/ to use the real face;
+   until then the fallback below keeps the "fancy" word distinct. */
+@font-face {
+  font-family: "OffBit";
+  src: url("../fonts/OffBit-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ---------- Motion tokens ---------- */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --nav-h: 88px;
+}
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.font-offbit { font-family: "OffBit", "Pixelify Sans", "Geist Mono", monospace; font-weight: 700; }
+
+/* ---------- Top nav: sticky, solid white ---------- */
+.top-nav {
+  background-color: #fff;
+  transition: box-shadow 200ms ease;
+}
+/* Hairline once content is scrolling underneath */
+.top-nav[data-scrolled] { box-shadow: 0 1px 0 rgb(15 23 42 / 0.06); }
+
+/* Menu item: both weights stacked so switching Light <-> Medium never shifts the row */
+.menu-item { display: inline-grid; color: #6b7280; transition: color 150ms ease; }
+.menu-item > span { grid-area: 1 / 1; transition: opacity 150ms ease; }
+.menu-item .w-sel { font-weight: 500; opacity: 0; }
+.menu-item .w-def { font-weight: 300; }
+.menu-item[aria-current="page"] { color: #111827; }
+.menu-item[aria-current="page"] .w-sel { opacity: 1; }
+.menu-item[aria-current="page"] .w-def { opacity: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .menu-item:hover { color: #111827; }
+}
+
+/* ---------- Hero intro: text blur-in, word by word ---------- */
+/* main.js wraps each word in .word with its index (--i); without JS the text simply shows */
+.line { display: block; }
+/* Phones: after the greeting, the sentence flows as one paragraph (like the mobile Figma frame) */
+@media (max-width: 639px) { .line + .line { display: inline; } }
+.word {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(0.2em);
+  animation: blur-in 800ms var(--ease-out) forwards;
+  animation-delay: calc(120ms + var(--i, 0) * 45ms);
+}
+@keyframes blur-in { to { opacity: 1; filter: blur(0); transform: none; } }
+
+.pop-in { opacity: 0; transform: scale(0.92); animation: pop-in 500ms var(--ease-out) forwards; animation-delay: var(--d, 600ms); }
+@keyframes pop-in { to { opacity: 1; transform: scale(1); } }
+
+/* Hero photos: overlapping stack; the hovered one pops forward, neighbours make room */
+.avatars { display: inline-flex; align-items: center; }
+.avatar {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  aspect-ratio: 1;
+  margin-right: -0.599em;
+  transition: transform 300ms var(--ease-out);
+}
+/* Tile is built in code (not an export) so photos fully cover it — no slivers between overlaps */
+.avatar-tile {
+  position: relative; display: block; overflow: hidden;
+  width: 0.9587em; height: 0.9587em;
+  border-radius: 0.3em;
+  background: #e2e8f0;
+  transform: rotate(var(--tile));
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 10px -4px rgb(15 23 42 / 0.18);
+}
+.avatar-tile > img {
+  position: absolute; left: -19%; top: -19%;
+  width: 138%; height: 138%; max-width: none;
+  object-fit: cover;
+  transform: rotate(var(--photo));
+}
+.avatar:last-child { margin-right: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .avatar:hover { z-index: 2; transform: translateY(-10px) scale(2) rotate(var(--tilt, 0deg)); }
+  .avatar:has(+ .avatar:hover) { transform: translateX(-16px); }
+  .avatar:hover + .avatar { transform: translateX(16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar { transition: none; }
+}
+
+@keyframes fade-in { to { opacity: 1; } }
+
+/* ---------- Hero hover tricks ---------- */
+/* "fancy": letters scramble through glyphs and resolve (main.js); width is locked while it runs */
+.fx-fancy { cursor: default; }
+.fx-fancy .word { white-space: nowrap; }
+
+/* "people-friendly": a soft green marker sweeps in and the letters wave hello */
+.fx-friendly { position: relative; isolation: isolate; cursor: default; }
+.fx-friendly::before {
+  content: ""; position: absolute; z-index: -1;
+  left: -0.08em; right: -0.08em; bottom: 0.14em; height: 0.42em;
+  border-radius: 0.1em;
+  background: #98ffc7;
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 350ms var(--ease-out);
+}
+.fx-friendly:hover::before { transform: scaleX(1); }
+.fx-friendly .ch { display: inline-block; }
+.fx-friendly.is-waving .ch {
+  animation: wave 600ms var(--ease-in-out);
+  animation-delay: calc(var(--c) * 28ms);
+}
+@keyframes wave {
+  0%, 100% { transform: none; }
+  40% { transform: translateY(-0.18em) rotate(-4deg); }
+}
+
+/* "Currently working at": Paydaş badge. Hover/focus: the logo's rings wind up one after another
+   (inner first) while a website preview card rises above it. */
+.company {
+  position: relative; z-index: 3;
+  display: inline-block; vertical-align: middle;
+  margin-left: 0.16em;
+  outline: none;
+}
+/* Default: monochrome logo on a grey tile. Hover/focus/tap: Paydaş colours on light blue. */
+.company-badge {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 1.311em; height: 1.311em;
+  border: 0.082em solid #f1f5f9; border-radius: 0.41em;
+  background: #e2e8f0;
+  transition: background-color 300ms ease, border-color 300ms ease;
+}
+.company:hover .company-badge,
+.company:focus-visible .company-badge,
+.company.is-open .company-badge { background: #ebf3ff; border-color: #f7f9fe; }
+.company-mark { width: 54%; height: auto; overflow: visible; }
+.company-mark .ring {
+  transform-box: view-box;
+  transform-origin: 8.4px 14.99px; /* shared centre of the arcs */
+  fill: var(--gray);
+  transition: fill 300ms ease;
+  transition-delay: calc(var(--r) * 60ms); /* colour runs outward with the spin */
+}
+.company:hover .ring,
+.company:focus-visible .ring,
+.company.is-open .ring { fill: var(--color); }
+.company.is-spinning .ring {
+  animation: ring-spin 900ms var(--ease-in-out) both;
+  animation-delay: calc(var(--r) * 60ms);
+}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+.company:focus-visible .company-badge { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4376ff; }
+
+.company-dot {
+  position: absolute; left: 50%; bottom: calc(100% + 0.05em);
+  width: 0.158em; height: 0.158em;
+  opacity: 0; transform: translateX(-50%) scale(0.5);
+  transition: opacity 150ms ease, transform 200ms var(--ease-out);
+}
+.company-preview {
+  position: absolute; left: 50%; bottom: calc(100% + 0.3em);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.92);
+  transform-origin: 50% 100%;
+  transition: opacity 200ms var(--ease-out), transform 300ms var(--ease-out);
+}
+.company-card {
+  position: relative; display: block; overflow: hidden;
+  width: 9em; height: 5.1em;
+  border: 1px solid #f1f5f9; border-radius: 0.42em;
+  background: #fff;
+  box-shadow: 0 24px 48px -20px rgb(15 23 42 / 0.3), 0 2px 6px rgb(15 23 42 / 0.06);
+}
+.company-card > img {
+  position: absolute; max-width: none; object-fit: cover; object-position: top;
+  left: -14.65%; top: -1.03%; width: 121.12%; height: 110.3%;
+}
+.company:hover .company-preview,
+.company:focus-visible .company-preview,
+.company.is-open .company-preview { opacity: 1; transform: translateX(-50%); }
+.company:hover .company-dot,
+.company:focus-visible .company-dot,
+.company.is-open .company-dot { opacity: 1; transform: translateX(-50%); }
+/* Phones: the badge sits near the right edge, so the card hangs to the left of it */
+@media (max-width: 639px) {
+  .company-preview { left: auto; right: -0.4em; transform: translateY(10px) scale(0.92); transform-origin: 85% 100%; }
+  .company:hover .company-preview,
+  .company:focus-visible .company-preview,
+  .company.is-open .company-preview { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-friendly::before, .company-preview, .company-dot { transition-duration: 0ms; }
+}
+
+/* Hero text gently recedes as Works scrolls in — scroll-driven, off the main thread */
+.hero { view-timeline-name: --hero; }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-recede {
+      animation: hero-recede linear both;
+      animation-timeline: --hero;
+      animation-range: exit 0% exit 60%;
+    }
+  }
+}
+@keyframes hero-recede { to { opacity: 0; transform: translateY(-64px); } }
+
+/* ---------- Scroll reveal (fires once) ---------- */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out); transition-delay: var(--d, 0ms); }
+.reveal[data-visible] { opacity: 1; transform: none; }
+
+/* ---------- Side nav ---------- */
+.side-indicator {
+  transition: transform 350ms var(--ease-in-out), opacity 200ms ease;
+}
+.page-control { color: #6b7280; transition: color 200ms ease; }
+.page-control .pc-label { display: block; transition: transform 300ms var(--ease-out); }
+.page-control .pc-icon {
+  opacity: 0; transform: scale(0.9);
+  transition: opacity 200ms ease, transform 300ms var(--ease-out);
+}
+.page-control[aria-current="true"] { color: #1f2937; }
+/* Desktop only: logo appears and the label slides over to make room */
+@media (min-width: 1024px) {
+  .page-control[aria-current="true"] .pc-icon { opacity: 1; transform: scale(1); }
+  .page-control[aria-current="true"] .pc-label { transform: translateX(var(--shift, 28px)); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .page-control:hover { color: #1f2937; }
+}
+/* Mobile chips: the active one shows its logo inline, before the label */
+@media (max-width: 1023px) {
+  .page-control .pc-icon { display: none; }
+  .page-control[aria-current="true"] .pc-icon { display: block; opacity: 1; transform: none; margin-right: 8px; }
+}
+/* Mobile chips: each chip owns its background, faded in place */
+.page-control .pc-bg { opacity: 0; transition: opacity 200ms ease; }
+.page-control[aria-current="true"] .pc-bg { opacity: 1; }
+@media (min-width: 1024px) { .page-control .pc-bg { display: none; } }
+
+/* ---------- Media hover (pointer devices only) ---------- */
+.zoom-img { transition: transform 600ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .zoom:hover .zoom-img { transform: scale(1.03); }
+}
+
+/* ---------- Reduced motion: keep fades, drop movement ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .word { filter: none; transform: none; animation-name: fade-in; animation-duration: 400ms; }
+  .pop-in { transform: none; animation: fade-in 400ms ease forwards; }
+  .reveal { transform: none; transition: opacity 400ms ease; }
+  .side-indicator { transition: opacity 200ms ease; }
+  .page-control .pc-label, .page-control .pc-icon { transition: opacity 200ms ease, color 200ms ease; }
+  .page-control .pc-icon { transform: none; }
+  .zoom-img { transition: none; }
+}
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

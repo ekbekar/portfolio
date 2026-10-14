@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — Erhan Kucukbekar</title>
+  <meta name="description" content="Erhan Kucukbekar, Product Designer.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <style>
+    /* Photo crops from the Figma frames, as % of each frame */
+    .crop { position: absolute; max-width: none; object-fit: cover; }
+  </style>
+</head>
+<body class="bg-white font-sans text-slate-900">
+
+  <header class="top-nav sticky top-0 z-40 flex h-[88px] items-center justify-center px-4 lg:px-20">
+    <nav aria-label="Main" class="flex items-center gap-6 text-base leading-normal">
+      <a href="index.html#works" class="menu-item"><span class="w-def">Works</span><span class="w-sel" aria-hidden="true">Works</span></a>
+      <a href="about.html" class="menu-item" aria-current="page"><span class="w-def">About</span><span class="w-sel" aria-hidden="true">About</span></a>    </nav>
+  </header>
+
+  <main class="mx-auto max-w-[1440px]">
+    <!-- Intro + career -->
+    <section class="flex flex-col gap-8 px-6 py-10 lg:flex-row lg:gap-2 lg:px-20">
+      <div class="reveal flex w-full flex-col gap-2 font-general lg:w-[400px] lg:shrink-0">
+        <h1 class="whitespace-nowrap text-2xl font-medium leading-[1.32] text-slate-800">Erhan Kucukbekar</h1>
+        <p class="text-base leading-normal text-slate-700">Product Designer</p>
+      </div>
+
+      <div class="flex w-full max-w-[635px] flex-col gap-10 font-general">
+        <div class="flex flex-col gap-9 text-xl leading-[1.5] text-slate-600 lg:text-2xl">
+          <p class="reveal" style="--d: 80ms">My passion for design started at a young age. This passion, which grew from building things as a child, accompanied me on my journey in the field of design.</p>
+          <p class="reveal" style="--d: 160ms">During this period, I started to develop my skills by participating in various communities and discovering more. I believe design is an integral part of my life, I love learning new things and sharing what I have learned. I also try to contribute to the development of the community as a volunteer member of the Kodla.co team.</p>
+        </div>
+
+        <ol class="flex flex-col gap-4" aria-label="Career">
+          <li class="reveal flex items-center gap-3 py-2" style="--d: 0ms">
+            <img src="assets/icons/co-paydas.svg" width="40" height="40" alt="" class="size-10 shrink-0">
+            <div class="min-w-0 flex-1"><p class="text-xs leading-[1.3] text-slate-400">Founding Product Designer</p><p class="text-sm font-medium leading-[1.4] text-slate-800">Paydaş</p></div>
+            <p class="whitespace-nowrap text-xs leading-[1.3] text-slate-400">2024 - Current</p>
+          </li>
+          <li class="reveal flex items-center gap-3 py-2" style="--d: 60ms">
+            <img src="assets/icons/co-paribu.svg" width="40" height="40" alt="" class="size-10 shrink-0">
+            <div class="min-w-0 flex-1"><p class="text-xs leading-[1.3] text-slate-400">Product Designer</p><p class="text-sm font-medium leading-[1.4] text-slate-800">Paribu Design Studio</p></div>
+            <p class="whitespace-nowrap text-xs leading-[1.3] text-slate-400">2022 - 2024</p>
+          </li>
+          <li class="reveal flex items-center gap-3 py-2" style="--d: 120ms">
+            <img src="assets/icons/co-sherpa.svg" width="40" height="40" alt="" class="size-10 shrink-0">
+            <div class="min-w-0 flex-1"><p class="text-xs leading-[1.3] text-slate-400">Product Designer</p><p class="text-sm font-medium leading-[1.4] text-slate-800">Sherpa Experience Studio</p></div>
+            <p class="whitespace-nowrap text-xs leading-[1.3] text-slate-400">2022</p>
+          </li>
+          <li class="reveal flex items-center gap-3 py-2" style="--d: 180ms">
+            <img src="assets/icons/co-loodos.svg" width="40" height="40" alt="" class="size-10 shrink-0">
+            <div class="min-w-0 flex-1"><p class="text-xs leading-[1.3] text-slate-400">Product Designer</p><p class="text-sm font-medium leading-[1.4] text-slate-800">Loodos</p></div>
+            <p class="whitespace-nowrap text-xs leading-[1.3] text-slate-400">2021 - 2022</p>
+          </li>
+          <li class="reveal flex items-center gap-3 py-2" style="--d: 240ms">
+            <img src="assets/icons/co-minus99.svg" width="40" height="40" alt="" class="size-10 shrink-0">
+            <div class="min-w-0 flex-1"><p class="text-xs leading-[1.3] text-slate-400">UI Designer</p><p class="text-sm font-medium leading-[1.4] text-slate-800">-99 Design Studio</p></div>
+            <p class="whitespace-nowrap text-xs leading-[1.3] text-slate-400">2020 - 2021</p>
+          </li>
+        </ol>
+
+        <img src="assets/about/line.svg" width="635" height="1" alt="" class="block h-px w-full">
+      </div>
+    </section>
+
+    <!-- Photos: three staggered columns, like the Figma frame -->
+    <section aria-label="Photos" class="grid grid-cols-1 gap-10 px-6 pb-16 font-general sm:grid-cols-2 md:grid-cols-3 md:gap-x-[clamp(24px,7.7vw,110px)] md:gap-y-0 lg:px-20 lg:pb-24">
+      <!-- Column 1 -->
+      <div class="flex flex-col gap-10 md:mt-[65px] md:gap-[80px]">
+        <figure class="reveal zoom flex flex-col gap-3">
+          <div class="relative aspect-[353/196] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-41.webp" alt="Mountain view under clouds" loading="lazy" style="left:0;top:-0.86%;width:100%;height:101.31%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">It’s my home, Sun try to show up</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3 md:-mt-[10px]">
+          <div class="relative aspect-[188/196] w-[53.26%] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-39.webp" alt="Land Cruiser FJ40 interior" loading="lazy" style="left:-3.2%;top:-40.31%;width:105.86%;height:180.61%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">My dream car ‘78 Land Cruiser FJ40</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3">
+          <div class="relative aspect-[353/518] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-48.webp" alt="Rain Vortex at Changi Airport" loading="lazy" style="left:0;top:0;width:102.14%;height:138.17%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">Changi Airport / Singapore</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3">
+          <div class="relative aspect-[353/196] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-43.webp" alt="Race car at the Honda Museum" loading="lazy" style="left:0;top:-0.77%;width:100%;height:101.31%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">Honda Museum | Japan</figcaption>
+        </figure>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="flex flex-col gap-10 md:mt-[65px]">
+        <figure class="reveal zoom flex flex-col gap-3" style="--d: 80ms">
+          <div class="relative aspect-[353/518] overflow-hidden bg-[#010101]"><img class="crop zoom-img" src="assets/about/img-40.webp" alt="Formula car on track" loading="lazy" style="left:0;top:-6.56%;width:100%;height:135.14%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">Dreams come true</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3 md:mt-[61px]" style="--d: 80ms">
+          <div class="relative aspect-[353/196] overflow-hidden bg-[#010101]"><img class="crop zoom-img" src="assets/about/img-45.webp" alt="Figure standing in desert sunset" loading="lazy" style="left:23.51%;top:0;width:54.39%;height:97.96%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">I'm acting like a Muad'Dib and waiting for the sand-worm</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3 md:mt-[93px]" style="--d: 80ms">
+          <div class="relative aspect-[353/342] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-44.webp" alt="Gyeongbokgung palace roof" loading="lazy" style="left:-3.05%;top:0;width:172.24%;height:100%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">Gyeongbokgung | Korea</figcaption>
+        </figure>
+      </div>
+
+      <!-- Column 3 -->
+      <div class="flex flex-col gap-10 md:mt-[135px]">
+        <figure class="reveal zoom flex flex-col gap-3" style="--d: 160ms">
+          <div class="relative aspect-[353/196] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-42.webp" alt="Formula 1 race track" loading="lazy" style="left:-16.71%;top:-16.84%;width:138.99%;height:140.82%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">I’m a Tifosi <span class="text-slate-400/50">(</span>still waiting for championship)</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3 md:mt-[168px]" style="--d: 160ms">
+          <div class="relative aspect-[353/196] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-47.webp" alt="Giving a talk in front of a screen" loading="lazy" style="left:-4.25%;top:-164.8%;width:108.62%;height:347.96%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">I can’t hide my hands when ı talking.</figcaption>
+        </figure>
+        <figure class="reveal zoom flex flex-col gap-3 md:mt-[132px]" style="--d: 160ms">
+          <div class="relative aspect-[353/518] overflow-hidden bg-gray-200"><img class="crop zoom-img" src="assets/about/img-46.webp" alt="Playing drums in a studio" loading="lazy" style="left:0.05%;top:0;width:99.95%;height:120.17%"></div>
+          <figcaption class="text-xs leading-[1.3] text-slate-400">Fifth time learning drum :)</figcaption>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mx-auto flex max-w-[1440px] flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between lg:px-20">
+    <div class="text-sm leading-normal">
+      <p class="text-slate-300">41.0110211, 29.0373671</p>
+      <p class="tabular-nums text-slate-700" data-clock>12:09:54</p>
+    </div>
+    <nav aria-label="Contact" class="flex items-center gap-6 text-base font-light leading-normal">
+      <a href="mailto:ekbekar@gmail.com" class="menu-item"><span>ekbekar@gmail.com</span></a>
+      <a href="https://www.linkedin.com/in/erhan-k%C3%BC%C3%A7%C3%BCkbekar-788464137/" class="menu-item" target="_blank" rel="noopener"><span>Linkedin</span></a>
+      <a href="https://x.com/HeyErhan" class="menu-item" target="_blank" rel="noopener"><span>X</span></a>
+    </nav>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
