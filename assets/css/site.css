@@ -28,11 +28,29 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
   transform: translateX(-50%);
   font-size: 14px; line-height: 18px;
   --bar-h: 44px;
-  --glass: rgb(245 245 245 / 0.8);
+  --gap: 6px;
   --radius: 14px;
+  /* Glass that stays readable over photos and grey cards: hairline stroke, top gloss, soft shadow */
+  --glass: rgb(248 250 252 / 0.86);
+  --glass-blur: blur(16px) saturate(1.8);
+  --stroke: inset 0 0 0 1px rgb(15 23 42 / 0.09);
+  --gloss: inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --lift: 0 10px 28px -14px rgb(15 23 42 / 0.35), 0 1px 2px rgb(15 23 42 / 0.06);
 }
-/* Narrower on phones so the bar + back-to-top button both fit */
-.nav-wrap { position: relative; width: min(350px, calc(100vw - 120px)); height: var(--bar-h); }
+/* Phones: bar + back-to-top together keep a 16px margin on each side */
+.nav-wrap {
+  position: relative; width: min(350px, calc(100vw - 32px - var(--bar-h) - var(--gap)));
+  height: var(--bar-h);
+  transition: transform 500ms var(--ease-in-out);
+}
+/* When the back-to-top button is out, slide the bar left by half its width so the pair stays centred */
+.site-nav.is-scrolled .nav-wrap { transform: translateX(calc((var(--bar-h) + var(--gap)) / -2)); }
+.nav-wrap::before { /* shadow under the closed bar (the card itself is clipped, so it can't cast one) */
+  content: ""; position: absolute; inset: 0; border-radius: var(--radius);
+  box-shadow: var(--lift);
+  transition: opacity 250ms ease;
+}
+.site-nav.is-open .nav-wrap::before { opacity: 0; }
 
 /* One glass surface: closed it is clipped to the bar, open it reveals the menu below.
    clip-path also clips pointer events, and the hidden menu is made inert in JS. */
@@ -40,17 +58,22 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
   position: absolute; top: 0; left: 0; right: 0;
   border-radius: var(--radius);
   background: var(--glass);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: inset 0 0 0 1px transparent, var(--gloss);
   clip-path: inset(0 0 calc(100% - var(--bar-h)) 0 round var(--radius));
-  transition: clip-path 650ms var(--ease-in-out);
+  transition: clip-path 650ms var(--ease-in-out), box-shadow 300ms ease;
 }
-.site-nav.is-open .nav-card { clip-path: inset(0 0 0 0 round var(--radius)); }
+/* Closed, the stroke lives on the bar (the card's own bottom edge is clipped away); open, it moves to the card */
+.site-nav.is-open .nav-card { clip-path: inset(0 0 0 0 round var(--radius)); box-shadow: var(--stroke), var(--gloss); }
 
 .nav-toggle {
   display: flex; width: 100%; height: var(--bar-h); align-items: center; justify-content: space-between;
   padding: 0 16px; border-radius: var(--radius);
   color: #475569;
+  box-shadow: var(--stroke);
+  transition: box-shadow 300ms ease;
 }
+.site-nav.is-open .nav-toggle { box-shadow: inset 0 0 0 1px transparent; }
 .nav-toggle:focus-visible, .nav-top:focus-visible, .nav-row:focus-visible, .nav-cta:focus-visible {
   outline: 2px solid #4376ff; outline-offset: 2px;
 }
@@ -112,12 +135,17 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .nav-row[aria-current="page"] { color: #0f172a; }
 .nav-cta {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  height: 48px; margin-top: 8px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  height: 40px; margin-top: 8px; border-radius: 10px;
+  font-size: 13px;
   background: #0f172a; color: #f8fafc;
   transition: background-color 150ms ease;
 }
-.nav-cta .cta-arrow { display: inline-block; transition: transform 200ms var(--ease-out); }
+.nav-cta .cta-arrow { display: inline-block; font-size: 12px; transition: transform 200ms var(--ease-out); }
+/* Read Resume + Book a Call share the last row */
+.nav-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.nav-actions .nav-cta { margin-top: 0; }
+.nav-cta--light { background: rgb(15 23 42 / 0.06); color: #0f172a; }
 
 /* Row art: Works = three project logos, About = the hero photos (smaller) */
 .nav-art { display: flex; align-items: center; padding-right: 8px; }
@@ -133,6 +161,8 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   .nav-row:hover { background: rgb(15 23 42 / 0.05); color: #0f172a; }
   .nav-cta:hover { background: #1e293b; }
   .nav-cta:hover .cta-arrow { transform: translateX(3px); }
+  .nav-cta--light:hover { background: rgb(15 23 42 / 0.1); }
+  .nav-cta:hover .cta-arrow--up { transform: translate(2px, -2px); }
   /* fan the art out a little on row hover; individual photos don't pop here */
   .nav-row .avatar:hover, .nav-row .avatar:has(+ .avatar:hover), .nav-row .avatar:hover + .avatar { transform: none; }
   .nav-row:hover .nav-logo:nth-child(1), .nav-row:hover .avatar:nth-child(1) { transform: translateX(-5px) rotate(calc(var(--tilt) - 10deg)); }
@@ -143,11 +173,12 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 /* Back-to-top: once the page scrolls it pulls out of the bar like a water drop
    (squash, stretch, wobble), with a thin liquid bridge that snaps. Its green ring fills with scroll progress. */
 .nav-top {
-  position: absolute; top: 0; left: calc(100% + 6px);
+  position: absolute; top: 0; left: calc(100% + var(--gap));
   width: var(--bar-h); height: var(--bar-h); border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
   background: var(--glass);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--stroke), var(--gloss), var(--lift);
   opacity: 0; pointer-events: none;
   transform-origin: 0% 50%;
 }
@@ -183,14 +214,14 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .nav-top img { width: 18px; height: 18px; transition: transform 200ms var(--ease-out); }
 .nav-progress { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.nav-progress rect { fill: none; stroke-width: 1.5; }
-.nav-progress .track { stroke: rgb(15 23 42 / 0.06); }
+.nav-progress rect { fill: none; stroke-width: 3; }
+.nav-progress .track { stroke: none; } /* the button stroke is the track */
 .nav-progress .bar { stroke: #98ffc7; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
 @media (hover: hover) and (pointer: fine) {
   .nav-top:hover img { transform: translateY(-2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav-card { transition-duration: 1ms; }
+  .nav-card, .nav-wrap { transition-duration: 1ms; }
   .nav-menu > *, .nav-label > span { transform: none !important; }
   .nav-icon .dot, .nav-top, .nav-top::before { animation-duration: 1ms !important; }
 }
