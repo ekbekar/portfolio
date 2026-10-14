@@ -8,11 +8,48 @@
     const toggle = siteNav.querySelector(".nav-toggle");
     const toTop = siteNav.querySelector(".nav-top");
     const bar = siteNav.querySelector(".nav-progress .bar");
+    const menu = siteNav.querySelector(".nav-menu");
+    const label = siteNav.querySelector("[data-nav-label]");
 
     const setOpen = (open) => {
+      if (open === siteNav.classList.contains("is-open")) return;
       siteNav.classList.toggle("is-open", open);
+      if (!open) siteNav.classList.add("was-open"); // lets the dots play their "close" animation
+      document.body.classList.toggle("nav-open", open); // blurred backdrop
+      menu.inert = !open; // hidden menu stays out of Tab order and clicks
       toggle.setAttribute("aria-expanded", String(open));
     };
+
+    // Bar label follows where you are: "ekbekar." at the top, "Works / <project>" on the
+    // works section, "About" on the about page. New text rolls in, old text rolls out.
+    const works = document.getElementById("works");
+    const isAbout = !works && /about/.test(location.pathname);
+    let project = "";
+    let labelKey = "ekbekar.";
+    const setLabel = (key, html) => {
+      if (key === labelKey) return;
+      labelKey = key;
+      for (const old of label.querySelectorAll(":scope > span:not(.is-out)")) {
+        old.classList.remove("is-in");
+        old.classList.add("is-out");
+        old.addEventListener("animationend", (e) => { if (e.target === old) old.remove(); });
+        if (reduceMotion) old.remove();
+      }
+      const next = document.createElement("span");
+      next.className = "is-in";
+      next.innerHTML = html;
+      label.append(next);
+    };
+    const updateLabel = () => {
+      if (works && works.getBoundingClientRect().top < 140 && project) {
+        setLabel(`w:${project}`, `<span class="muted">Works /</span> ${project}`);
+      } else if (isAbout && window.scrollY > 24) {
+        setLabel("about", "About");
+      } else {
+        setLabel("ekbekar.", "ekbekar.");
+      }
+    };
+    document.addEventListener("project:change", (e) => { project = e.detail.name; updateLabel(); });
     toggle.addEventListener("click", () => setOpen(!siteNav.classList.contains("is-open")));
     document.addEventListener("click", (e) => { if (!siteNav.contains(e.target)) setOpen(false); });
     document.addEventListener("keydown", (e) => {
@@ -30,10 +67,12 @@
       bar.style.strokeDashoffset = String(100 - p * 100);
       const show = window.scrollY > 24;
       if (show !== shown) {
+        if (shown && !show) siteNav.classList.add("was-scrolled"); // drop gets absorbed back
         shown = show;
         siteNav.classList.toggle("is-scrolled", show);
         toTop.tabIndex = show ? 0 : -1;
       }
+      updateLabel();
     };
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -277,6 +316,7 @@
         if (on) current = a;
       }
       if (!current) return;
+      document.dispatchEvent(new CustomEvent("project:change", { detail: { name: current.querySelector(".pc-label").textContent } }));
       const li = current.parentElement;
       if (indicator) {
         indicator.style.transform = `translateY(${li.offsetTop}px)`;

@@ -22,105 +22,177 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
 
 .font-offbit { font-family: "OffBit", "Pixelify Sans", "Geist Mono", monospace; font-weight: 700; }
 
-/* ---------- Top nav: floating "ekbekar." menu + back-to-top progress ---------- */
+/* ---------- Top nav: floating glass bar that grows into the menu + back-to-top with scroll progress ---------- */
 .site-nav {
   position: fixed; z-index: 50; top: 16px; left: 50%;
   transform: translateX(-50%);
-  font-size: 12px; line-height: normal;
+  font-size: 14px; line-height: 18px;
+  --bar-h: 44px;
+  --glass: rgb(245 245 245 / 0.8);
+  --radius: 14px;
 }
-.nav-wrap { position: relative; width: 270px; }
+/* Narrower on phones so the bar + back-to-top button both fit */
+.nav-wrap { position: relative; width: min(350px, calc(100vw - 120px)); height: var(--bar-h); }
+
+/* One glass surface: closed it is clipped to the bar, open it reveals the menu below.
+   clip-path also clips pointer events, and the hidden menu is made inert in JS. */
+.nav-card {
+  position: absolute; top: 0; left: 0; right: 0;
+  border-radius: var(--radius);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  clip-path: inset(0 0 calc(100% - var(--bar-h)) 0 round var(--radius));
+  transition: clip-path 650ms var(--ease-in-out);
+}
+.site-nav.is-open .nav-card { clip-path: inset(0 0 0 0 round var(--radius)); }
 
 .nav-toggle {
-  display: flex; width: 100%; align-items: center; justify-content: space-between;
-  padding: 8px; border-radius: 8px;
-  background: #f8fafc; color: #64748b;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -16px rgb(15 23 42 / 0.25);
-  transition: background-color 150ms ease;
+  display: flex; width: 100%; height: var(--bar-h); align-items: center; justify-content: space-between;
+  padding: 0 16px; border-radius: var(--radius);
+  color: #475569;
 }
 .nav-toggle:focus-visible, .nav-top:focus-visible, .nav-row:focus-visible, .nav-cta:focus-visible {
   outline: 2px solid #4376ff; outline-offset: 2px;
 }
-@media (hover: hover) and (pointer: fine) {
-  .nav-toggle:hover { background: #f1f5f9; }
+
+/* Bar label rolls to the section you're in: old text slides up and out, new text rises in */
+.nav-label { position: relative; display: inline-grid; overflow: hidden; height: 18px; }
+.nav-label > span { grid-area: 1 / 1; white-space: nowrap; }
+.nav-label > .is-in { animation: label-in 350ms var(--ease-out) both; }
+.nav-label > .is-out { animation: label-out 250ms var(--ease-out) both; }
+@keyframes label-in { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes label-out { to { transform: translateY(-100%); opacity: 0; } }
+.nav-label .muted { color: #94a3b8; }
+
+/* Blurred page behind the open menu (sits outside .site-nav, whose transform would trap `fixed`) */
+.nav-backdrop {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgb(255 255 255 / 0.3);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 300ms var(--ease-out);
+}
+body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+
+/* Menu icon: dots flow together into one blob, then split into the other shape.
+   Each dot has its closed (⋮) and open (⁙) offsets from the centre; the goo filter melts them as they meet. */
+.nav-icon { width: 18px; height: 18px; fill: #475569; overflow: visible; }
+.nav-icon .dot {
+  transform-box: view-box; transform-origin: 7px 7px;
+  transform: translate(var(--cx), var(--cy)) scale(var(--cs, 1));
+}
+.site-nav.is-open .nav-icon .dot { transform: translate(var(--ox), var(--oy)); animation: dots-open 520ms var(--ease-in-out) both; }
+.site-nav.was-open:not(.is-open) .nav-icon .dot { animation: dots-close 520ms var(--ease-in-out) both; }
+@keyframes dots-open {
+  0%   { transform: translate(var(--cx), var(--cy)) scale(var(--cs, 1)); }
+  42%, 58% { transform: translate(0, 0) scale(1.25); }
+  100% { transform: translate(var(--ox), var(--oy)) scale(1); }
+}
+@keyframes dots-close {
+  0%   { transform: translate(var(--ox), var(--oy)) scale(1); }
+  42%, 58% { transform: translate(0, 0) scale(1.25); }
+  100% { transform: translate(var(--cx), var(--cy)) scale(var(--cs, 1)); }
 }
 
-/* ⋮ -> ⁙ : the three dots turn to a diagonal and two more dots complete the cross */
-.nav-icon { width: 14px; height: 14px; fill: #64748b; overflow: visible; }
-.nav-dots { transform-box: view-box; transform-origin: 7px 7px; transition: transform 250ms var(--ease-out); }
-.nav-dot-x { transform-box: fill-box; transform-origin: center; opacity: 0; transform: scale(0.4); transition: opacity 150ms ease, transform 200ms var(--ease-out); }
-.site-nav.is-open .nav-dots { transform: rotate(-45deg); }
-.site-nav.is-open .nav-dot-x { opacity: 1; transform: none; transition-delay: 60ms; }
-
-/* Menu panel drops below the bar; overlays the page so nothing reflows */
-.nav-menu {
-  position: absolute; left: 0; right: 0; top: calc(100% + 2px);
-  display: flex; flex-direction: column; gap: 2px;
-  opacity: 0; transform: translateY(-6px) scale(0.98); transform-origin: 50% 0;
-  pointer-events: none; visibility: hidden;
-  transition: opacity 150ms ease, transform 200ms var(--ease-out), visibility 0s linear 200ms;
+/* Menu content inside the same surface */
+.nav-menu { display: flex; flex-direction: column; gap: 4px; padding: 4px 10px 12px; }
+.nav-menu > * { opacity: 0; transform: translateY(-6px); transition: opacity 150ms ease, transform 200ms var(--ease-out); }
+.site-nav.is-open .nav-menu > * {
+  opacity: 1; transform: none;
+  transition: opacity 300ms var(--ease-out), transform 400ms var(--ease-out);
+  transition-delay: calc(180ms + var(--i) * 60ms);
 }
-.site-nav.is-open .nav-menu {
-  opacity: 1; transform: none; pointer-events: auto; visibility: visible;
-  transition: opacity 200ms var(--ease-out), transform 250ms var(--ease-out), visibility 0s;
-}
-.nav-menu > * { opacity: 0; transform: translateY(-4px); transition: opacity 150ms ease, transform 200ms var(--ease-out); }
-.site-nav.is-open .nav-menu > * { opacity: 1; transform: none; transition-delay: calc(var(--i) * 40ms); }
+.nav-divider { height: 1px; margin: 0 6px 6px; background: rgb(15 23 42 / 0.06); }
 
 .nav-row {
-  position: relative; display: flex; height: 32px; align-items: center; justify-content: space-between;
-  padding-left: 8px; border-radius: 8px;
-  background: #f8fafc; color: #475569;
+  position: relative; display: flex; height: 48px; align-items: center; justify-content: space-between;
+  padding-left: 12px; border-radius: 10px;
+  color: #334155;
   transition: background-color 150ms ease, color 150ms ease;
 }
 .nav-row[aria-current="page"] { color: #0f172a; }
 .nav-cta {
-  display: flex; align-items: center; justify-content: center;
-  padding: 8px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 48px; margin-top: 8px; border-radius: 10px;
   background: #0f172a; color: #f8fafc;
   transition: background-color 150ms ease;
 }
+.nav-cta .cta-arrow { display: inline-block; transition: transform 200ms var(--ease-out); }
 
 /* Row art: Works = three project logos, About = the hero photos (smaller) */
-.nav-art { display: flex; align-items: center; padding-right: 3px; }
+.nav-art { display: flex; align-items: center; padding-right: 8px; }
+.nav-art:has(.nav-logo) { padding-right: 13px; } /* lines the logos up with the photo tiles below */
 .nav-logo {
-  width: 20px; height: 20px; margin-left: -6px;
+  width: 29px; height: 29px; margin-left: -8px; /* same size as the About photo tiles (0.9587em × 30px) */
   transform: rotate(var(--tilt));
   transition: transform 250ms var(--ease-out);
 }
-.nav-row .avatars { font-size: 23.73px; } /* tiles come out at the Figma size (22.75px) */
+.nav-row .avatars { font-size: 30px; }
 .nav-row .avatar { transition: transform 250ms var(--ease-out); }
 @media (hover: hover) and (pointer: fine) {
-  .nav-row:hover { background: #f1f5f9; color: #0f172a; }
+  .nav-row:hover { background: rgb(15 23 42 / 0.05); color: #0f172a; }
   .nav-cta:hover { background: #1e293b; }
+  .nav-cta:hover .cta-arrow { transform: translateX(3px); }
   /* fan the art out a little on row hover; individual photos don't pop here */
   .nav-row .avatar:hover, .nav-row .avatar:has(+ .avatar:hover), .nav-row .avatar:hover + .avatar { transform: none; }
-  .nav-row:hover .nav-logo:nth-child(1), .nav-row:hover .avatar:nth-child(1) { transform: translateX(-4px) rotate(calc(var(--tilt) - 8deg)); }
-  .nav-row:hover .nav-logo:nth-child(3), .nav-row:hover .avatar:nth-child(3) { transform: translateX(4px) rotate(calc(var(--tilt) + 8deg)); }
-  .nav-row:hover .nav-logo:nth-child(2), .nav-row:hover .avatar:nth-child(2) { transform: translateY(-2px) rotate(var(--tilt)); }
+  .nav-row:hover .nav-logo:nth-child(1), .nav-row:hover .avatar:nth-child(1) { transform: translateX(-5px) rotate(calc(var(--tilt) - 10deg)); }
+  .nav-row:hover .nav-logo:nth-child(3), .nav-row:hover .avatar:nth-child(3) { transform: translateX(5px) rotate(calc(var(--tilt) + 10deg)); }
+  .nav-row:hover .nav-logo:nth-child(2), .nav-row:hover .avatar:nth-child(2) { transform: translateY(-3px) rotate(var(--tilt)); }
 }
 
-/* Back-to-top: appears once the page scrolls; its green border fills with scroll progress */
+/* Back-to-top: once the page scrolls it pulls out of the bar like a water drop
+   (squash, stretch, wobble), with a thin liquid bridge that snaps. Its green ring fills with scroll progress. */
 .nav-top {
-  position: absolute; top: 0; left: calc(100% + 4px);
-  width: 32px; height: 32.69px; border-radius: 8px;
+  position: absolute; top: 0; left: calc(100% + 6px);
+  width: var(--bar-h); height: var(--bar-h); border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
-  background: #f8fafc;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -16px rgb(15 23 42 / 0.25);
-  opacity: 0; transform: translateX(-6px) scale(0.9); pointer-events: none;
-  transition: opacity 150ms ease, transform 200ms var(--ease-out), background-color 150ms ease;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  opacity: 0; pointer-events: none;
+  transform-origin: 0% 50%;
 }
-.site-nav.is-scrolled .nav-top { opacity: 1; transform: none; pointer-events: auto; }
-.nav-top img { width: 14px; height: 14px; transition: transform 200ms var(--ease-out); }
+.nav-top::before { /* the bridge between bar and drop */
+  content: ""; position: absolute; right: 100%; top: 50%;
+  width: 12px; height: 18px; margin-top: -9px;
+  background: var(--glass); border-radius: 50%;
+  transform-origin: 0% 50%; transform: scale(0);
+}
+.nav-top > * { opacity: 0; transition: opacity 200ms ease; }
+.site-nav.is-scrolled .nav-top { pointer-events: auto; animation: drop-out 720ms linear both; }
+.site-nav.is-scrolled .nav-top::before { animation: bridge-snap 720ms linear both; }
+.site-nav.is-scrolled .nav-top > * { opacity: 1; transition-delay: 300ms; }
+.site-nav.was-scrolled:not(.is-scrolled) .nav-top { animation: drop-in 380ms linear both; }
+@keyframes drop-out {
+  0%   { opacity: 0; transform: translateX(-28px) scale(0.25, 0.25); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  28%  { opacity: 1; transform: translateX(-4px) scale(1.18, 0.78); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  50%  { transform: translateX(2px) scale(0.9, 1.1); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  70%  { transform: translateX(-1px) scale(1.05, 0.96); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  86%  { transform: translateX(0) scale(0.98, 1.02); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes bridge-snap {
+  0%   { transform: scale(1.4, 1); }
+  22%  { transform: scale(1, 0.55); }
+  36%  { transform: scale(0.6, 0.18); }
+  44%, 100% { transform: scale(0); }
+}
+@keyframes drop-in {
+  0%   { opacity: 1; transform: none; animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  45%  { opacity: 1; transform: translateX(-6px) scale(1.1, 0.85); animation-timing-function: cubic-bezier(0.77, 0, 0.175, 1); }
+  100% { opacity: 0; transform: translateX(-28px) scale(0.25); }
+}
+.nav-top img { width: 18px; height: 18px; transition: transform 200ms var(--ease-out); }
 .nav-progress { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .nav-progress rect { fill: none; stroke-width: 1.5; }
-.nav-progress .track { stroke: #f1f5f9; }
+.nav-progress .track { stroke: rgb(15 23 42 / 0.06); }
 .nav-progress .bar { stroke: #98ffc7; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
 @media (hover: hover) and (pointer: fine) {
-  .nav-top:hover { background: #f1f5f9; }
   .nav-top:hover img { transform: translateY(-2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav-menu, .nav-menu > *, .nav-top, .nav-dots, .nav-dot-x { transform: none !important; }
+  .nav-card { transition-duration: 1ms; }
+  .nav-menu > *, .nav-label > span { transform: none !important; }
+  .nav-icon .dot, .nav-top, .nav-top::before { animation-duration: 1ms !important; }
 }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
