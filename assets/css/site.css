@@ -214,9 +214,9 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .nav-top img { width: 18px; height: 18px; transition: transform 200ms var(--ease-out); }
 .nav-progress { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.nav-progress rect { fill: none; stroke-width: 3; }
+.nav-progress rect { fill: none; stroke-width: 2; }
 .nav-progress .track { stroke: none; } /* the button stroke is the track */
-.nav-progress .bar { stroke: #98ffc7; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
+.nav-progress .bar { stroke: #4cff9e; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; }
 @media (hover: hover) and (pointer: fine) {
   .nav-top:hover img { transform: translateY(-2px); }
 }
