@@ -306,6 +306,31 @@
     const indicator = ul.querySelector(".side-indicator");
     let activeId = null;
 
+    // Mobile: keep the active tab centred in the tab row
+    let activeLi = null;
+    const centerChip = (behavior) => {
+      if (desktop.matches || !activeLi) return;
+      const left = activeLi.offsetLeft - (ul.clientWidth - activeLi.offsetWidth) / 2;
+      if (Math.abs(ul.scrollLeft - left) > 4) ul.scrollTo({ left, behavior });
+    };
+    // Edge blur: show each side only while there are more tabs to scroll that way
+    const updateEdges = () => {
+      const max = ul.scrollWidth - ul.clientWidth;
+      navEl.toggleAttribute("data-more-left", ul.scrollLeft > 2);
+      navEl.toggleAttribute("data-more-right", ul.scrollLeft < max - 2);
+    };
+    ul.addEventListener("scroll", updateEdges, { passive: true });
+    window.addEventListener("resize", updateEdges);
+    updateEdges();
+
+    // iOS can drop the smooth scroll while the page is still gliding after a flick,
+    // so re-centre once page scrolling has settled.
+    let settle;
+    window.addEventListener("scroll", () => {
+      clearTimeout(settle);
+      settle = setTimeout(() => centerChip(reduceMotion ? "auto" : "smooth"), 160);
+    }, { passive: true });
+
     const setActive = (id) => {
       if (id === activeId) return;
       activeId = id;
@@ -322,9 +347,8 @@
         indicator.style.transform = `translateY(${li.offsetTop}px)`;
         indicator.style.opacity = "1";
       }
-      if (!desktop.matches) {
-        ul.scrollTo({ left: li.offsetLeft - 24, behavior: reduceMotion ? "auto" : "smooth" });
-      }
+      activeLi = li;
+      centerChip(reduceMotion ? "auto" : "smooth");
     };
 
     const sections = [...listEl.querySelectorAll("[data-project]")];

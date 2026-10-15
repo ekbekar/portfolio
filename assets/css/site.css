@@ -445,6 +445,34 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .page-control .pc-bg { opacity: 0; transition: opacity 200ms ease; }
 .page-control[aria-current="true"] .pc-bg { opacity: 1; }
 @media (min-width: 1024px) { .page-control .pc-bg { display: none; } }
+/* Mobile tab strip: tabs run edge to edge and blur out at the sides instead of being chopped */
+@media (max-width: 1023px) {
+  .chip-row { scroll-padding-inline: 24px; }
+  /* Edges: tabs blur and fade as they slide off the side (progressive blur: strongest at the
+     screen edge). Each side only shows while there are more tabs to scroll that way. */
+  .chip-edge {
+    position: absolute; bottom: 8px; width: 48px; height: 56px;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity 250ms var(--ease-out);
+  }
+  .chip-edge--left {
+    left: 0;
+    background: linear-gradient(to right, #fff 15%, rgb(255 255 255 / 0));
+    -webkit-mask-image: linear-gradient(to right, #000 35%, transparent);
+    mask-image: linear-gradient(to right, #000 35%, transparent);
+  }
+  .chip-edge--right {
+    right: 0;
+    background: linear-gradient(to left, #fff 15%, rgb(255 255 255 / 0));
+    -webkit-mask-image: linear-gradient(to left, #000 35%, transparent);
+    mask-image: linear-gradient(to left, #000 35%, transparent);
+  }
+  .chip-strip[data-more-left] .chip-edge--left,
+  .chip-strip[data-more-right] .chip-edge--right { opacity: 1; }
+}
+@media (min-width: 1024px) { .chip-edge { display: none; } }
 
 /* ---------- Media hover (pointer devices only) ---------- */
 .zoom-img { transition: transform 600ms var(--ease-out); }
