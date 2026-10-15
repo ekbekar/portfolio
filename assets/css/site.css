@@ -473,6 +473,14 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   .chip-strip[data-more-right] .chip-edge--right { opacity: 1; }
 }
 @media (min-width: 1024px) { .chip-edge { display: none; } }
+/* Mobile: tab strip hides on scroll down, returns on scroll up (state set in main.js) */
+@media (max-width: 1023px) {
+  .chip-strip { transition: transform 300ms var(--ease-out); }
+  .chip-strip[data-hidden] { transform: translateY(-100%); transition-timing-function: var(--ease-in-out); }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .chip-strip { transition-duration: 1ms; }
+}
 
 /* ---------- Media hover (pointer devices only) ---------- */
 .zoom-img { transition: transform 600ms var(--ease-out); }

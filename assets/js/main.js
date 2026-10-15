@@ -376,5 +376,25 @@
         unlockTimer = setTimeout(unlock, 1200); // fallback where scrollend is unsupported
       });
     }
+
+    // Mobile: the tab strip slides away while you scroll down through the projects (more room
+    // for the work) and comes back as soon as you scroll up. It stays put during a tab-tap scroll.
+    const worksSection = document.getElementById("works");
+    let lastY = window.scrollY;
+    let hidden = false;
+    const setHidden = (h) => {
+      if (h === hidden) return;
+      hidden = h;
+      navEl.toggleAttribute("data-hidden", h);
+    };
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      if (desktop.matches || locked) { lastY = y; setHidden(false); return; }
+      const dy = y - lastY;
+      if (Math.abs(dy) < 6) return; // ignore tiny jitters
+      lastY = y;
+      const inWorks = worksSection.getBoundingClientRect().top < 0; // strip is stuck to the top
+      setHidden(dy > 0 && inWorks);
+    }, { passive: true });
   }
 })();
