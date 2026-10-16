@@ -108,6 +108,42 @@
     }
   }
 
+  // ---------- About: paragraphs get the same word blur, played when they scroll into view ----------
+  for (const para of document.querySelectorAll(".blur-words")) {
+    let i = 0;
+    const walker = document.createTreeWalker(para, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const frag = document.createDocumentFragment();
+      for (const part of node.textContent.split(/(\s+)/)) {
+        if (!part) continue;
+        if (/^\s+$/.test(part)) { frag.append(part); continue; }
+        const w = document.createElement("span");
+        w.className = "word";
+        w.style.setProperty("--i", i++);
+        w.textContent = part;
+        frag.append(w);
+      }
+      node.replaceWith(frag);
+    }
+  }
+
+  // ---------- About: work experience accordion (one open at a time) ----------
+  const careers = [...document.querySelectorAll(".career")];
+  const setCareer = (item, open) => {
+    item.classList.toggle("is-open", open);
+    item.querySelector(".career-head").setAttribute("aria-expanded", String(open));
+    item.querySelector(".career-body").inert = !open;
+  };
+  for (const item of careers) {
+    item.querySelector(".career-head").addEventListener("click", () => {
+      const open = !item.classList.contains("is-open");
+      for (const other of careers) if (other !== item) setCareer(other, false);
+      setCareer(item, open);
+    });
+  }
+
   // ---------- Hero hover tricks ----------
   // "fancy": scramble through glyphs, resolving left to right
   const fancy = document.querySelector(".fx-fancy .word") || document.querySelector(".fx-fancy");
@@ -213,16 +249,35 @@
   if (list && sideNav && window.PROJECTS) renderWorks(list, sideNav, window.PROJECTS);
 
   // ---------- Scroll reveal: fire once ----------
-  const reveals = document.querySelectorAll(".reveal");
+  const reveals = document.querySelectorAll(".reveal, .curtain, .blur-words");
+  // a clipped-away curtain never counts as intersecting, so watch its (unclipped) parent instead
+  const watchTarget = (el) => (el.classList.contains("curtain") ? el.parentElement : el);
   if ("IntersectionObserver" in window) {
+    const pending = new Map();
+    // photos arriving together reveal one by one: top to bottom, then left to right
+    const CURTAIN_GAP = 140;
+    let nextCurtainAt = 0;
     const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        e.target.setAttribute("data-visible", "");
+      const hits = entries.filter((e) => e.isIntersecting).sort((a, b) =>
+        Math.round(a.boundingClientRect.top - b.boundingClientRect.top) || a.boundingClientRect.left - b.boundingClientRect.left);
+      for (const e of hits) {
+        for (const el of pending.get(e.target)) {
+          if (el.classList.contains("curtain")) {
+            const now = performance.now();
+            const delay = Math.max(0, nextCurtainAt - now);
+            nextCurtainAt = now + delay + CURTAIN_GAP;
+            el.style.setProperty("--d", `${Math.round(delay)}ms`);
+          }
+          el.setAttribute("data-visible", "");
+        }
         io.unobserve(e.target);
       }
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
-    reveals.forEach((el) => io.observe(el));
+    reveals.forEach((el) => {
+      const t = watchTarget(el);
+      if (!pending.has(t)) { pending.set(t, []); io.observe(t); }
+      pending.get(t).push(el);
+    });
   } else {
     reveals.forEach((el) => el.setAttribute("data-visible", ""));
   }
