@@ -129,21 +129,6 @@
     }
   }
 
-  // ---------- About: work experience accordion (one open at a time) ----------
-  const careers = [...document.querySelectorAll(".career")];
-  const setCareer = (item, open) => {
-    item.classList.toggle("is-open", open);
-    item.querySelector(".career-head").setAttribute("aria-expanded", String(open));
-    item.querySelector(".career-body").inert = !open;
-  };
-  for (const item of careers) {
-    item.querySelector(".career-head").addEventListener("click", () => {
-      const open = !item.classList.contains("is-open");
-      for (const other of careers) if (other !== item) setCareer(other, false);
-      setCareer(item, open);
-    });
-  }
-
   // ---------- Hero hover tricks ----------
   // "fancy": scramble through glyphs, resolving left to right
   const fancy = document.querySelector(".fx-fancy .word") || document.querySelector(".fx-fancy");
@@ -249,24 +234,32 @@
   if (list && sideNav && window.PROJECTS) renderWorks(list, sideNav, window.PROJECTS);
 
   // ---------- Scroll reveal: fire once ----------
-  const reveals = document.querySelectorAll(".reveal, .curtain, .blur-words");
+  const reveals = document.querySelectorAll(".reveal, .curtain, .blur-words, .career-list");
   // a clipped-away curtain never counts as intersecting, so watch its (unclipped) parent instead
   const watchTarget = (el) => (el.classList.contains("curtain") ? el.parentElement : el);
   if ("IntersectionObserver" in window) {
     const pending = new Map();
-    // photos arriving together reveal one by one: top to bottom, then left to right
-    const CURTAIN_GAP = 140;
-    let nextCurtainAt = 0;
+    // About motion plays as one timeline: things arriving together queue up (top to bottom,
+    // then left to right) and each holds the stage for a slot before the next one starts
+    const slotFor = (el) => {
+      if (el.classList.contains("blur-words")) return el.querySelectorAll(".word").length * 8 + 150;
+      if (el.classList.contains("career-list")) return 500;
+      if (el.classList.contains("curtain")) return 140;
+      return 0;
+    };
+    let nextAt = 0;
     const io = new IntersectionObserver((entries) => {
       const hits = entries.filter((e) => e.isIntersecting).sort((a, b) =>
         Math.round(a.boundingClientRect.top - b.boundingClientRect.top) || a.boundingClientRect.left - b.boundingClientRect.left);
       for (const e of hits) {
         for (const el of pending.get(e.target)) {
-          if (el.classList.contains("curtain")) {
+          const slot = slotFor(el);
+          if (slot) {
             const now = performance.now();
-            const delay = Math.max(0, nextCurtainAt - now);
-            nextCurtainAt = now + delay + CURTAIN_GAP;
-            el.style.setProperty("--d", `${Math.round(delay)}ms`);
+            const delay = Math.max(0, nextAt - now);
+            nextAt = now + delay + slot;
+            // set on the watched element so a photo's caption (a sibling of the curtain) shares it
+            e.target.style.setProperty("--start", `${Math.round(delay)}ms`);
           }
           el.setAttribute("data-visible", "");
         }
