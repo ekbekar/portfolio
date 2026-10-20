@@ -243,8 +243,10 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 /* ---------- Hero intro: text blur-in, word by word ---------- */
 /* main.js wraps each word in .word with its index (--i); without JS the text simply shows */
 .line { display: block; }
-/* Phones: after the greeting, the sentence flows as one paragraph (like the mobile Figma frame) */
-@media (max-width: 639px) { .line + .line { display: inline; } }
+/* Phones: keep one sentence per line, sized so the longest line ("…curious about", ~16.3em) never wraps */
+@media (max-width: 639px) {
+  .hero h1 { font-size: min(20.5px, calc((100vw - 48px) / 16.3)); line-height: 1.6; }
+}
 .word {
   display: inline-block;
   opacity: 0;
