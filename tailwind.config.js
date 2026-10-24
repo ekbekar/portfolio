@@ -7,7 +7,6 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ["Geist", "ui-sans-serif", "system-ui", "sans-serif"],
-        general: ["General Sans", "Geist", "ui-sans-serif", "system-ui", "sans-serif"],
       },
     },
   },
