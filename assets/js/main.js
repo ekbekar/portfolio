@@ -445,4 +445,62 @@
       setHidden(dy > 0 && inWorks);
     }, { passive: true });
   }
+
+  // ---------- 29 Ekim: Turkish flag bunting from the top corners ----------
+  // Up for Republic Day week (Oct 22 – Nov 2, visitor's local date). Add ?29ekim to preview any day.
+  const now = new Date();
+  const month = now.getMonth(), day = now.getDate();
+  const republicDay = (month === 9 && day >= 22) || (month === 10 && day <= 2) || /[?&]29ekim\b/.test(location.search);
+  if (republicDay) {
+    // One pennant, 26×38, hung from the middle of its top edge: red triangle, crescent opening down, star below
+    const star = Array.from({ length: 10 }, (_, k) => {
+      const r = k % 2 ? 0.85 : 2.1, a = -Math.PI / 2 + (k * Math.PI) / 5;
+      return `${(13 + r * Math.cos(a)).toFixed(2)},${(18.6 + r * Math.sin(a)).toFixed(2)}`;
+    }).join(" ");
+    const pennant = `<g transform="translate(-13 0)"><path d="M0 0H26L13 38Z" fill="#FF4B55"/>` +
+      `<circle cx="13" cy="11" r="5.2" fill="#F5F5F5"/><circle cx="13" cy="12.3" r="4.3" fill="#FF4B55"/>` +
+      `<polygon points="${star}" fill="#F5F5F5"/></g>`;
+
+    // A string hanging between two anchors just above the page edge takes a catenary shape:
+    // y = anchorY + a·(cosh(half/a) − cosh((x − mid)/a)), with `a` solved so the dip equals `sag`.
+    // Pennants are sewn along it at equal arc-length spacing, and each one's top edge lies on
+    // the string's tangent, so the end ones tilt and the middle ones hang straight.
+    const W = 300, H = 110, ANCHOR_Y = -14, SAG = 64, COUNT = 8, SCALE = 1.05, GAP = 7;
+    const half = W / 2;
+    let lo = 1, hi = 1e5; // the dip shrinks as `a` grows; bisect for the one that matches SAG
+    for (let k = 0; k < 60; k++) {
+      const a = (lo + hi) / 2;
+      if (a * (Math.cosh(half / a) - 1) > SAG) lo = a; else hi = a;
+    }
+    const a = (lo + hi) / 2;
+    const yAt = (x) => ANCHOR_Y + a * (Math.cosh(half / a) - Math.cosh((x - half) / a));
+    const length = 2 * a * Math.sinh(half / a);
+    const xAtArc = (s) => half + a * Math.asinh(s / a - Math.sinh(half / a));
+    const string = Array.from({ length: 31 }, (_, k) => {
+      const x = (W * k) / 30;
+      return `${k ? "L" : "M"}${x.toFixed(1)} ${yAt(x).toFixed(1)}`;
+    }).join("");
+
+    const step = 26 * SCALE + GAP;
+    const firstArc = length / 2 - (step * (COUNT - 1)) / 2;
+    const garland = (side, windDelay) => {
+      let flags = "";
+      for (let k = 0; k < COUNT; k++) {
+        const x = xAtArc(firstArc + k * step);
+        const tilt = (Math.atan(-Math.sinh((x - half) / a)) * 180) / Math.PI;
+        // The gust reaches each pennant a little later the further right it hangs
+        const lag = (windDelay + (x / W) * 0.9).toFixed(2);
+        flags += `<g transform="translate(${x.toFixed(1)} ${yAt(x).toFixed(1)}) rotate(${tilt.toFixed(1)}) scale(${SCALE})">` +
+          `<g class="flag" style="--lag: ${lag}">${pennant}</g></g>`;
+      }
+      return `<svg class="bunting bunting-${side}" viewBox="0 0 ${W} ${H}">` +
+        `<g class="swag" style="--lag: ${windDelay}"><path class="bunting-string" d="${string}"/>${flags}</g></svg>`;
+    };
+
+    const wrap = document.createElement("div");
+    wrap.className = "bunting-wrap";
+    wrap.setAttribute("aria-hidden", "true");
+    wrap.innerHTML = garland("left", 0) + garland("right", 0.6);
+    document.body.prepend(wrap);
+  }
 })();

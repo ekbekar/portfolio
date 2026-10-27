@@ -559,3 +559,35 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ---------- 29 Ekim: Turkish flag bunting hanging from the top corners (built in main.js) ---------- */
+.bunting-wrap { position: absolute; z-index: 30; top: 0; left: 0; right: 0; height: 0; pointer-events: none; }
+/* The same garland in both corners, the same distance from each edge */
+.bunting { position: absolute; top: 0; width: clamp(160px, 20.5vw, 300px); overflow: visible; }
+.bunting-left { left: clamp(8px, 2.8vw, 40px); }
+.bunting-right { right: clamp(8px, 2.8vw, 40px); }
+/* Phones: the nav bar fills the top, so the garlands hang just below it, tied off at the screen
+   edges (outer ends) and tucked under the bar (inner ends) so no string end floats in the air */
+@media (max-width: 639px) {
+  .bunting-wrap { top: calc(16px + 44px + 4px); }
+  .bunting-left { left: 0; }
+  .bunting-right { right: 0; }
+}
+.bunting-string { fill: none; stroke: #E2E8F0; stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* Two motions, both pinned to the string so nothing comes loose:
+   - the whole swag swings gently toward you and back, which from the front reads as the dip shortening;
+   - each pennant's top edge is sewn to the string, so only the tip flutters (skew sideways, shorten as it lifts).
+   --lag lets a gust travel left to right along the string. */
+.bunting .swag, .bunting .flag { transform-box: fill-box; transform-origin: 50% 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .bunting .swag { animation: swag-sway 5.2s ease-in-out infinite; animation-delay: calc(var(--lag) * 1s - 6s); }
+  .bunting .flag { animation: flag-flutter 2.4s ease-in-out infinite; animation-delay: calc(var(--lag) * 1s - 6s); }
+}
+@keyframes swag-sway {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.94); }
+}
+@keyframes flag-flutter {
+  0%, 100% { transform: skewX(5deg) scaleY(0.98); }
+  50% { transform: skewX(-5deg) scaleY(0.9); }
+}
