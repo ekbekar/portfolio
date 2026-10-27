@@ -446,12 +446,20 @@
     }, { passive: true });
   }
 
-  // ---------- 29 Ekim: Turkish flag bunting from the top corners ----------
-  // Up for Republic Day week (Oct 22 – Nov 2, visitor's local date). Add ?29ekim to preview any day.
+  // ---------- Turkish flag bunting from the top corners on national holidays ----------
+  // Goes up a few days before each bayram and comes down the day after (visitor's local date).
+  // 23 Nisan, 19 Mayıs, 30 Ağustos and 29 Ekim. Add ?bayrak to preview any day.
+  const FLAG_DAYS = [ // [month, firstDay, month, lastDay], months 1–12
+    [4, 20, 4, 24],  // 23 Nisan Ulusal Egemenlik ve Çocuk Bayramı
+    [5, 16, 5, 20],  // 19 Mayıs Atatürk'ü Anma, Gençlik ve Spor Bayramı
+    [8, 27, 8, 31],  // 30 Ağustos Zafer Bayramı
+    [10, 22, 11, 2], // 29 Ekim Cumhuriyet Bayramı, the whole week
+  ];
   const now = new Date();
-  const month = now.getMonth(), day = now.getDate();
-  const republicDay = (month === 9 && day >= 22) || (month === 10 && day <= 2) || /[?&]29ekim\b/.test(location.search);
-  if (republicDay) {
+  const today = (now.getMonth() + 1) * 100 + now.getDate(); // e.g. 1029
+  const flagDay = FLAG_DAYS.some(([m1, d1, m2, d2]) => today >= m1 * 100 + d1 && today <= m2 * 100 + d2) ||
+    /[?&](bayrak|29ekim)\b/.test(location.search);
+  if (flagDay) {
     // One pennant, 26×38, hung from the middle of its top edge: red triangle, crescent opening down, star below
     const star = Array.from({ length: 10 }, (_, k) => {
       const r = k % 2 ? 0.85 : 2.1, a = -Math.PI / 2 + (k * Math.PI) / 5;
