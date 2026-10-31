@@ -318,8 +318,8 @@
           <div class="relative flex flex-col gap-6 overflow-hidden rounded-2xl bg-[#f5f5f5] p-4 pb-0 lg:block lg:h-[600px] lg:rounded-[40px] lg:p-0">
             ${header}
             ${info("lg:absolute lg:left-6 lg:top-[calc(50%-69.92px)] lg:-translate-y-1/2 lg:w-[400px]")}
-            <div class="zoom relative -mb-px ml-auto aspect-[464/599] w-[78%] max-w-[464px] overflow-hidden lg:absolute lg:bottom-px lg:right-0 lg:m-0 lg:h-[599px] lg:w-[464px] lg:aspect-auto">
-              <img src="assets/works/${p.cover.img}" alt="${p.name} app shown on a phone" class="zoom-img absolute max-w-none" style="left:-39.66%;top:-2.34%;width:176.29%;height:102.42%" fetchpriority="${p.id === projects[0].id ? "high" : "auto"}">
+            <div class="relative -mb-px ml-auto aspect-[464/599] w-[78%] max-w-[464px] overflow-hidden lg:absolute lg:bottom-px lg:right-0 lg:m-0 lg:h-[599px] lg:w-[464px] lg:aspect-auto">
+              <img src="assets/works/${p.cover.img}" alt="${p.name} app shown on a phone" class="absolute max-w-none" style="left:-39.66%;top:-2.34%;width:176.29%;height:102.42%" fetchpriority="${p.id === projects[0].id ? "high" : "auto"}">
             </div>
           </div>`;
       } else {
@@ -330,8 +330,8 @@
             ${header.replace("lg:absolute lg:left-6 lg:right-6 lg:top-6 lg:z-10", "")}
             ${info("lg:w-[400px]")}
             <div class="relative aspect-[848.694/440] w-full overflow-hidden lg:absolute lg:bottom-0 lg:left-6 lg:top-[var(--shot-top)] lg:w-[calc(100%-59.3px)] lg:aspect-auto" style="--shot-top:${c.top}px">
-              <div class="zoom absolute left-0 top-0 aspect-[848.694/693.1] w-full overflow-hidden ${frame}">
-                <img src="assets/works/${c.img}" alt="${p.name} interface" class="zoom-img absolute max-w-none ${c.rounded ? "rounded-[16px]" : ""}" style="${c.imgStyle}" fetchpriority="${p.id === projects[0].id ? "high" : "auto"}">
+              <div class="absolute left-0 top-0 aspect-[848.694/693.1] w-full overflow-hidden ${frame}">
+                <img src="assets/works/${c.img}" alt="${p.name} interface" class="absolute max-w-none ${c.rounded ? "rounded-[16px]" : ""}" style="${c.imgStyle}" fetchpriority="${p.id === projects[0].id ? "high" : "auto"}">
               </div>
             </div>
           </div>`;
@@ -453,7 +453,7 @@
     [4, 20, 4, 24],  // 23 Nisan Ulusal Egemenlik ve Çocuk Bayramı
     [5, 16, 5, 20],  // 19 Mayıs Atatürk'ü Anma, Gençlik ve Spor Bayramı
     [8, 27, 8, 31],  // 30 Ağustos Zafer Bayramı
-    [10, 22, 11, 2], // 29 Ekim Cumhuriyet Bayramı, the whole week
+    [10, 22, 10, 30], // 29 Ekim Cumhuriyet Bayramı, the whole week before
   ];
   const now = new Date();
   const today = (now.getMonth() + 1) * 100 + now.getDate(); // e.g. 1029
