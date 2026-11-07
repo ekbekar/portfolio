@@ -341,41 +341,27 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   50%   { opacity: 0; }
 }
 
-/* "people-friendly": a soft Studio Ghibli style breeze (main.js adds the letters and the drifting leaves).
-   Slow and gentle on purpose: long sine-like easing, the opposite of the choppy "fancy". */
+/* "people-friendly": pencil scribble. main.js builds an SVG of zigzag hatching masked to (slightly
+   bolder) copies of the letters, and sets the timing: --step/--letter: each letter hatches in after
+   the last · --boil: the drawn strokes flicker between two takes · --back (per letter): its strokes
+   fade out as the real letter fades back in, left to right. */
 .fx-friendly { position: relative; isolation: isolate; cursor: default; }
-/* Letters bend from their base like grass as the gust passes left to right */
-.fx-friendly .ch { display: inline-block; transform-origin: 50% 90%; }
-.fx-friendly.is-waving .ch {
-  animation: breeze 2000ms cubic-bezier(0.37, 0, 0.63, 1);
-  animation-delay: calc(var(--c) * 55ms);
+.fx-friendly .ch { display: inline-block; }
+.sb-fx { position: absolute; inset: 0; pointer-events: none; }
+.sb-ink { position: absolute; left: 0; top: 0; overflow: visible; }
+.sb-l { stroke: #334155; animation: sb-out 400ms ease var(--back) forwards; }
+.sb-a, .sb-b { fill: none; stroke-width: var(--sw); stroke-linecap: round; stroke-linejoin: round; }
+.sb-a {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: sb-draw var(--letter) linear calc(var(--i) * var(--step)) forwards, sb-boil-a 200ms steps(1) var(--boil) infinite;
 }
-@keyframes breeze {
-  0%, 100% { transform: none; }
-  20% { transform: rotate(4deg); }
-  45% { transform: rotate(-2.2deg); }
-  68% { transform: rotate(1deg); }
-  86% { transform: rotate(-0.4deg); }
-}
-/* Leaves and petals: the outer span rides the wind, the inner one tumbles and flips */
-.gb-drift {
-  position: absolute; left: var(--x); top: 0.55em; width: var(--s); height: var(--s);
-  pointer-events: none;
-  animation: gb-drift var(--dur) cubic-bezier(0.3, 0.6, 0.4, 1) var(--delay) both;
-}
-.gb-flutter { display: block; width: 100%; height: 100%; animation: gb-flutter var(--flip) ease-in-out var(--delay) infinite alternate; }
-.gb-flutter svg { display: block; width: 100%; height: 100%; overflow: visible; }
-@keyframes gb-drift {
-  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
-  18% { opacity: 0.85; }
-  50% { transform: translate(calc(var(--tx) * 0.45), calc(var(--ty) * 0.8)) rotate(calc(var(--spin) * 0.5)); }
-  72% { opacity: 0.85; }
-  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--spin)); }
-}
-@keyframes gb-flutter {
-  from { transform: scaleX(1) rotate(-8deg); }
-  to { transform: scaleX(0.45) rotate(9deg); }
-}
+.sb-b { opacity: 0; animation: sb-boil-b 200ms steps(1) var(--boil) infinite; }
+.fx-friendly.is-scribble .ch { opacity: 0; animation: sb-in 400ms ease var(--back) forwards; }
+@keyframes sb-draw { to { stroke-dashoffset: 0; } }
+@keyframes sb-boil-a { 50% { opacity: 0; } }
+@keyframes sb-boil-b { 50% { opacity: 1; } }
+@keyframes sb-out { to { opacity: 0; } }
+@keyframes sb-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* "Currently working at": Paydaş badge. Hover/focus: the logo's rings wind up one after another
    (inner first) while a website preview card rises above it. */

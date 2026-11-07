@@ -183,52 +183,89 @@
     fancyHost.addEventListener("pointerenter", () => { if (!playing) play(0); });
   }
 
-  // "people-friendly": a soft Studio Ghibli style breeze. The letters sway like grass as the wind
-  // passes left to right, and a few leaves and petals lift off and drift away on it (site.css).
+  // "people-friendly": the words are scribbled in with pencil hatching, letter by letter (the After
+  // Effects "Scribble" look: zigzag strokes masked to each glyph, boiling slightly once drawn),
+  // then each letter's strokes fade back into the real letter, left to right (styles in site.css).
   const friendly = document.querySelector(".fx-friendly");
   const friendlyWord = friendly && (friendly.querySelector(".word") || friendly);
   if (friendlyWord) {
-    const letters = [...friendlyWord.textContent];
-    friendlyWord.textContent = "";
-    letters.forEach((ch, i) => {
+    const letters = [...friendlyWord.textContent].map((ch, i) => {
       const s = document.createElement("span");
       s.className = "ch";
       s.style.setProperty("--c", i);
       s.textContent = ch;
-      friendlyWord.append(s);
+      return s;
     });
+    friendlyWord.textContent = "";
+    friendlyWord.append(...letters);
 
-    const leaf = (fill) => `<svg viewBox="0 0 20 12" aria-hidden="true"><path d="M1 6C5 .5 14 .5 19 6 14 11.5 5 11.5 1 6Z" fill="${fill}"/>` +
-      `<path d="M3 6Q10 5 17 6" fill="none" stroke="#3F6B3A" stroke-opacity=".35" stroke-width=".8"/></svg>`;
-    const petal = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1C9 3 10 7 6 11 2 7 3 3 6 1Z" fill="#F4A7B9"/></svg>`;
-    const DRIFTERS = [leaf("#8DBB78"), leaf("#AFCF8C"), petal, leaf("#7FB069"), leaf("#AFCF8C"), petal];
-    const rand = (min, max) => (min + Math.random() * (max - min)).toFixed(3);
-    const blowLeaves = () => {
-      DRIFTERS.forEach((svg, k) => {
-        const drift = document.createElement("span");
-        drift.className = "gb-drift";
-        drift.innerHTML = `<span class="gb-flutter">${svg}</span>`;
-        drift.style.setProperty("--x", `${rand(5, 85)}%`);
-        drift.style.setProperty("--s", `${rand(0.36, 0.5)}em`);
-        drift.style.setProperty("--tx", `${rand(1.2, 2.6)}em`);
-        drift.style.setProperty("--ty", `${rand(-1.3, -0.6)}em`);
-        drift.style.setProperty("--spin", `${rand(-140, 140)}deg`);
-        drift.style.setProperty("--dur", `${rand(2.6, 3.4)}s`);
-        drift.style.setProperty("--flip", `${rand(0.6, 0.95)}s`);
-        drift.style.setProperty("--delay", `${k * 140 + Math.round(Math.random() * 80)}ms`);
-        drift.style.zIndex = k % 3 === 0 ? "-1" : "1"; // a few pass behind the word
-        drift.addEventListener("animationend", (e) => { if (e.target === drift) drift.remove(); });
-        friendly.append(drift);
+    const LETTER_MS = 150, STEP_MS = 55; // each letter's hatching, and the gap to the next one
+    const BOIL_MS = 350;                 // the finished scribble boils a moment before handing back
+    const BACK_STEP_MS = 32;             // letters return one after another, left to right
+    let uid = 0;
+    const scribble = () => {
+      const n = letters.length;
+      const box = friendly.getBoundingClientRect();
+      const font = getComputedStyle(friendlyWord);
+      const fs = parseFloat(font.fontSize);
+      // The baseline is where an empty inline-block's bottom edge sits
+      const probe = document.createElement("span");
+      probe.style.cssText = "display:inline-block;width:0;height:0";
+      friendlyWord.prepend(probe);
+      const base = probe.getBoundingClientRect().bottom - box.top;
+      probe.remove();
+
+      // Hatching across one letter's box: the pencil goes up and back down along the same slant,
+      // a step further each time, so the strokes come out parallel and diagonal; a little jitter
+      // on every point keeps it hand-made
+      const top = base - 0.8 * fs, bottom = base + 0.26 * fs, gap = 0.1 * fs, slant = 0.45 * fs;
+      const jitter = () => (Math.random() - 0.5) * 0.06 * fs;
+      const hatch = (x0, x1) => {
+        let d = "";
+        for (let x = x0 - slant, k = 0; x <= x1 + gap; x += gap, k++) {
+          const up = k % 2 === 1;
+          d += `${k ? "L" : "M"}${(x + (up ? slant : 0) + jitter()).toFixed(1)} ${((up ? top : bottom) + jitter()).toFixed(1)}`;
+        }
+        return d;
+      };
+      const drawEnd = (n - 1) * STEP_MS + LETTER_MS;
+      let glyphs = "", strokes = "";
+      letters.forEach((l, i) => {
+        const r = l.getBoundingClientRect();
+        const x = r.left - box.left, pad = 0.04 * fs;
+        glyphs += `<text x="${x.toFixed(1)}" y="${base.toFixed(1)}">${l.textContent}</text>`;
+        const back = drawEnd + BOIL_MS + i * BACK_STEP_MS;
+        l.style.setProperty("--back", `${back}ms`);
+        // two takes of the same letter; flipping between them is the "boil"
+        strokes += `<g class="sb-l" style="--i:${i};--back:${back}ms">` +
+          `<path class="sb-a" d="${hatch(x - pad, x + r.width + pad)}" pathLength="1"/>` +
+          `<path class="sb-b" d="${hatch(x - pad, x + r.width + pad)}"/></g>`;
       });
+      const id = `sb-mask-${++uid}`;
+
+      const fx = document.createElement("span");
+      fx.className = "sb-fx";
+      fx.setAttribute("aria-hidden", "true");
+      fx.style.setProperty("--step", `${STEP_MS}ms`);
+      fx.style.setProperty("--letter", `${LETTER_MS}ms`);
+      fx.style.setProperty("--boil", `${drawEnd}ms`);
+      fx.innerHTML =
+        `<svg class="sb-ink" width="${box.width}" height="${box.height}" viewBox="0 0 ${box.width.toFixed(1)} ${box.height.toFixed(1)}" style="--sw:${(0.036 * fs).toFixed(2)}px">` +
+        `<mask id="${id}" maskUnits="userSpaceOnUse" x="-20" y="-20" width="${box.width + 40}" height="${box.height + 40}">` +
+        // the pencil letters are a little bolder than the hero's light weight so the hatching shows
+        `<g fill="#fff" stroke="#fff" stroke-width="${(0.07 * fs).toFixed(2)}" stroke-linejoin="round" ` +
+        `font-family='${font.fontFamily.replace(/'/g, "")}' font-size="${fs}" font-weight="${font.fontWeight}">${glyphs}</g></mask>` +
+        `<g mask="url(#${id})">${strokes}</g></svg>`;
+      friendly.append(fx);
+
+      friendly.classList.add("is-scribble");
+      setTimeout(() => { friendly.classList.remove("is-scribble"); fx.remove(); }, drawEnd + BOIL_MS + n * BACK_STEP_MS + 600);
     };
 
-    const last = friendlyWord.lastElementChild;
     friendly.addEventListener("pointerenter", () => {
-      if (reduceMotion || friendly.classList.contains("is-waving")) return;
-      friendly.classList.add("is-waving");
-      blowLeaves();
+      if (reduceMotion || friendly.classList.contains("is-scribble")) return;
+      scribble();
     });
-    last.addEventListener("animationend", (e) => { if (e.target === last) friendly.classList.remove("is-waving"); });
   }
 
   // Company badge: tap toggles the preview on touch screens; tap elsewhere closes it
