@@ -341,25 +341,40 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   50%   { opacity: 0; }
 }
 
-/* "people-friendly": a soft green marker sweeps in and the letters wave hello */
+/* "people-friendly": a soft Studio Ghibli style breeze (main.js adds the letters and the drifting leaves).
+   Slow and gentle on purpose: long sine-like easing, the opposite of the choppy "fancy". */
 .fx-friendly { position: relative; isolation: isolate; cursor: default; }
-.fx-friendly::before {
-  content: ""; position: absolute; z-index: -1;
-  left: -0.08em; right: -0.08em; bottom: 0.14em; height: 0.42em;
-  border-radius: 0.1em;
-  background: #98ffc7;
-  transform: scaleX(0); transform-origin: left center;
-  transition: transform 350ms var(--ease-out);
-}
-.fx-friendly:hover::before { transform: scaleX(1); }
-.fx-friendly .ch { display: inline-block; }
+/* Letters bend from their base like grass as the gust passes left to right */
+.fx-friendly .ch { display: inline-block; transform-origin: 50% 90%; }
 .fx-friendly.is-waving .ch {
-  animation: wave 600ms var(--ease-in-out);
-  animation-delay: calc(var(--c) * 28ms);
+  animation: breeze 2000ms cubic-bezier(0.37, 0, 0.63, 1);
+  animation-delay: calc(var(--c) * 55ms);
 }
-@keyframes wave {
+@keyframes breeze {
   0%, 100% { transform: none; }
-  40% { transform: translateY(-0.18em) rotate(-4deg); }
+  20% { transform: rotate(4deg); }
+  45% { transform: rotate(-2.2deg); }
+  68% { transform: rotate(1deg); }
+  86% { transform: rotate(-0.4deg); }
+}
+/* Leaves and petals: the outer span rides the wind, the inner one tumbles and flips */
+.gb-drift {
+  position: absolute; left: var(--x); top: 0.55em; width: var(--s); height: var(--s);
+  pointer-events: none;
+  animation: gb-drift var(--dur) cubic-bezier(0.3, 0.6, 0.4, 1) var(--delay) both;
+}
+.gb-flutter { display: block; width: 100%; height: 100%; animation: gb-flutter var(--flip) ease-in-out var(--delay) infinite alternate; }
+.gb-flutter svg { display: block; width: 100%; height: 100%; overflow: visible; }
+@keyframes gb-drift {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  18% { opacity: 0.85; }
+  50% { transform: translate(calc(var(--tx) * 0.45), calc(var(--ty) * 0.8)) rotate(calc(var(--spin) * 0.5)); }
+  72% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--spin)); }
+}
+@keyframes gb-flutter {
+  from { transform: scaleX(1) rotate(-8deg); }
+  to { transform: scaleX(0.45) rotate(9deg); }
 }
 
 /* "Currently working at": Paydaş badge. Hover/focus: the logo's rings wind up one after another
@@ -439,7 +454,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fx-friendly::before, .company-preview, .company-dot { transition-duration: 0ms; }
+  .company-preview, .company-dot { transition-duration: 0ms; }
 }
 
 /* Hero text gently recedes as Works scrolls in — scroll-driven, off the main thread */

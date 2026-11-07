@@ -183,7 +183,8 @@
     fancyHost.addEventListener("pointerenter", () => { if (!playing) play(0); });
   }
 
-  // "people-friendly": split into letters so they can wave
+  // "people-friendly": a soft Studio Ghibli style breeze. The letters sway like grass as the wind
+  // passes left to right, and a few leaves and petals lift off and drift away on it (site.css).
   const friendly = document.querySelector(".fx-friendly");
   const friendlyWord = friendly && (friendly.querySelector(".word") || friendly);
   if (friendlyWord) {
@@ -196,12 +197,38 @@
       s.textContent = ch;
       friendlyWord.append(s);
     });
+
+    const leaf = (fill) => `<svg viewBox="0 0 20 12" aria-hidden="true"><path d="M1 6C5 .5 14 .5 19 6 14 11.5 5 11.5 1 6Z" fill="${fill}"/>` +
+      `<path d="M3 6Q10 5 17 6" fill="none" stroke="#3F6B3A" stroke-opacity=".35" stroke-width=".8"/></svg>`;
+    const petal = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1C9 3 10 7 6 11 2 7 3 3 6 1Z" fill="#F4A7B9"/></svg>`;
+    const DRIFTERS = [leaf("#8DBB78"), leaf("#AFCF8C"), petal, leaf("#7FB069"), leaf("#AFCF8C"), petal];
+    const rand = (min, max) => (min + Math.random() * (max - min)).toFixed(3);
+    const blowLeaves = () => {
+      DRIFTERS.forEach((svg, k) => {
+        const drift = document.createElement("span");
+        drift.className = "gb-drift";
+        drift.innerHTML = `<span class="gb-flutter">${svg}</span>`;
+        drift.style.setProperty("--x", `${rand(5, 85)}%`);
+        drift.style.setProperty("--s", `${rand(0.36, 0.5)}em`);
+        drift.style.setProperty("--tx", `${rand(1.2, 2.6)}em`);
+        drift.style.setProperty("--ty", `${rand(-1.3, -0.6)}em`);
+        drift.style.setProperty("--spin", `${rand(-140, 140)}deg`);
+        drift.style.setProperty("--dur", `${rand(2.6, 3.4)}s`);
+        drift.style.setProperty("--flip", `${rand(0.6, 0.95)}s`);
+        drift.style.setProperty("--delay", `${k * 140 + Math.round(Math.random() * 80)}ms`);
+        drift.style.zIndex = k % 3 === 0 ? "-1" : "1"; // a few pass behind the word
+        drift.addEventListener("animationend", (e) => { if (e.target === drift) drift.remove(); });
+        friendly.append(drift);
+      });
+    };
+
     const last = friendlyWord.lastElementChild;
     friendly.addEventListener("pointerenter", () => {
       if (reduceMotion || friendly.classList.contains("is-waving")) return;
       friendly.classList.add("is-waving");
+      blowLeaves();
     });
-    last.addEventListener("animationend", () => friendly.classList.remove("is-waving"));
+    last.addEventListener("animationend", (e) => { if (e.target === last) friendly.classList.remove("is-waving"); });
   }
 
   // Company badge: tap toggles the preview on touch screens; tap elsewhere closes it
