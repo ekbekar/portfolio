@@ -130,29 +130,57 @@
   }
 
   // ---------- Hero hover tricks ----------
-  // "fancy": scramble through glyphs, resolving left to right
-  const fancy = document.querySelector(".fx-fancy .word") || document.querySelector(".fx-fancy");
-  if (fancy) {
-    const original = fancy.textContent;
-    const glyphs = "!<>-_\\/[]{}=+*^?#%&@";
-    let running = false;
-    fancy.parentElement.closest(".fx-fancy").addEventListener("pointerenter", () => {
-      if (running || reduceMotion) return;
-      running = true;
-      fancy.style.display = "inline-block";
-      fancy.style.width = `${fancy.offsetWidth}px`; // no reflow of the line while glyphs change
-      let frame = 0;
-      const tick = () => {
-        const revealed = Math.floor(frame / 2);
-        fancy.textContent = [...original]
-          .map((ch, i) => (i < revealed ? ch : glyphs[Math.floor(Math.random() * glyphs.length)]))
-          .join("");
-        frame++;
-        if (revealed <= original.length) setTimeout(tick, 45);
-        else { fancy.textContent = original; fancy.style.width = ""; running = false; }
-      };
-      tick();
+  // "fancy": Spider-Verse style reveal. Each letter bursts in as a tilted comic panel with a
+  // halftone splash, prints off-register in CMY, then snaps clean (keyframes in site.css).
+  // It takes over the word's blur-in slot in the intro, and replays with fresh colours on hover.
+  const fancyHost = document.querySelector(".fx-fancy");
+  const fancy = fancyHost && (fancyHost.querySelector(".word") || fancyHost);
+  if (fancy && !reduceMotion) {
+    const letters = [...fancy.textContent].map((ch) => {
+      const l = document.createElement("span");
+      l.className = "sv-l";
+      l.textContent = ch;
+      return l;
     });
+    fancy.textContent = "";
+    fancy.append(...letters);
+    fancy.classList.add("sv");
+
+    const PANELS = ["#D31FCB", "#2F35F2", "#13B13D", "#FFC400"];
+    const pick = (avoid) => { let c; do c = PANELS[Math.floor(Math.random() * PANELS.length)]; while (c === avoid); return c; };
+    const rand = (min, max) => (min + Math.random() * (max - min)).toFixed(3);
+    let playing = false;
+    const play = (startMs) => {
+      playing = true;
+      fancy.classList.remove("sv-play");
+      void fancy.offsetWidth; // restart the keyframes
+      letters.forEach((l, k) => {
+        const c = pick();
+        l.style.setProperty("--c", c);
+        l.style.setProperty("--c2", pick(c));
+        l.style.setProperty("--r", `${rand(-14, 14)}deg`);
+        l.style.setProperty("--sk", `${rand(-12, 12)}deg`);
+        l.style.setProperty("--jx", `${rand(-0.12, 0.12)}em`);
+        l.style.setProperty("--jy", `${rand(-0.1, 0.1)}em`);
+        l.style.setProperty("--dx", `${rand(-0.35, 0.35)}em`);
+        l.style.setProperty("--dy", `${rand(-0.4, 0.05)}em`);
+        l.style.setProperty("--d", `${startMs + k * 60}ms`);
+      });
+      fancy.classList.add("sv-play");
+    };
+    letters.at(-1).addEventListener("animationend", (e) => {
+      if (e.target !== letters.at(-1) || e.animationName !== "sv-letter") return;
+      fancy.classList.remove("sv-play", "sv-pending");
+      playing = false;
+    });
+
+    // Intro: hidden until its turn in the hero's word-by-word reveal (same timing as .word in site.css)
+    fancy.classList.add("sv-pending");
+    const introAt = 120 + (parseInt(fancy.style.getPropertyValue("--i"), 10) || 0) * 45;
+    play(introAt);
+    // Safety net: never leave the word hidden if the animation can't run
+    setTimeout(() => fancy.classList.remove("sv-pending"), introAt + letters.length * 60 + 1000);
+    fancyHost.addEventListener("pointerenter", () => { if (!playing) play(0); });
   }
 
   // "people-friendly": split into letters so they can wave
