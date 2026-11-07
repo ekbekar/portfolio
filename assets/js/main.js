@@ -130,12 +130,22 @@
   }
 
   // ---------- Hero hover tricks ----------
+  // On first load they also play once, in order, each step overlapping the end of the last:
+  // the hero text blurs in, "fancy" bursts as the last words settle, and "people-friendly" is
+  // scribbled as fancy's last letter lands. introEnd is when the last word's blur-in finishes
+  // (same timing as .word in site.css).
+  const heroWordCount = document.querySelectorAll(".line-inner .word").length;
+  const introEnd = 120 + Math.max(0, heroWordCount - 1) * 45 + 800;
+  const introNext = introEnd - 350; // the last words are nearly sharp by now
+  let playFriendly = null; // set by the "people-friendly" block below
+
   // "fancy": Spider-Verse style reveal. Each letter bursts in as a tilted comic panel with a
   // halftone splash, prints off-register in CMY, then snaps clean (keyframes in site.css).
-  // It takes over the word's blur-in slot in the intro, and replays with fresh colours on hover.
+  // Replays with fresh colours on hover.
   const fancyHost = document.querySelector(".fx-fancy");
   const fancy = fancyHost && (fancyHost.querySelector(".word") || fancyHost);
-  if (fancy && !reduceMotion) {
+  const fancyAnimates = Boolean(fancy && !reduceMotion);
+  if (fancyAnimates) {
     const letters = [...fancy.textContent].map((ch) => {
       const l = document.createElement("span");
       l.className = "sv-l";
@@ -144,7 +154,6 @@
     });
     fancy.textContent = "";
     fancy.append(...letters);
-    fancy.classList.add("sv");
 
     const PANELS = ["#D31FCB", "#2F35F2", "#13B13D", "#FFC400"];
     const pick = (avoid) => { let c; do c = PANELS[Math.floor(Math.random() * PANELS.length)]; while (c === avoid); return c; };
@@ -170,16 +179,14 @@
     };
     letters.at(-1).addEventListener("animationend", (e) => {
       if (e.target !== letters.at(-1) || e.animationName !== "sv-letter") return;
-      fancy.classList.remove("sv-play", "sv-pending");
+      fancy.classList.remove("sv-play");
       playing = false;
     });
 
-    // Intro: hidden until its turn in the hero's word-by-word reveal (same timing as .word in site.css)
-    fancy.classList.add("sv-pending");
-    const introAt = 120 + (parseInt(fancy.style.getPropertyValue("--i"), 10) || 0) * 45;
-    play(introAt);
-    // Safety net: never leave the word hidden if the animation can't run
-    setTimeout(() => fancy.classList.remove("sv-pending"), introAt + letters.length * 60 + 1000);
+    // Intro: burst as the hero text settles, then hand over to "people-friendly" as the last
+    // letter lands (its panel stage is over, it is only settling from there)
+    setTimeout(() => play(0), introNext);
+    setTimeout(() => playFriendly && playFriendly(), introNext + (letters.length - 1) * 60 + 200);
     fancyHost.addEventListener("pointerenter", () => { if (!playing) play(0); });
   }
 
@@ -262,10 +269,13 @@
       setTimeout(() => { friendly.classList.remove("is-scribble"); fx.remove(); }, drawEnd + BOIL_MS + n * BACK_STEP_MS + 600);
     };
 
-    friendly.addEventListener("pointerenter", () => {
+    playFriendly = () => {
       if (reduceMotion || friendly.classList.contains("is-scribble")) return;
       scribble();
-    });
+    };
+    friendly.addEventListener("pointerenter", playFriendly);
+    // Intro: normally "fancy" hands over to this; without it, play right after the hero text
+    if (!fancyAnimates) setTimeout(playFriendly, introNext);
   }
 
   // Company badge: tap toggles the preview on touch screens; tap elsewhere closes it

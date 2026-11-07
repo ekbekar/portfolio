@@ -302,9 +302,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
    The "bold" is a text stroke rather than a heavier weight, so the line never reflows. */
 .fx-fancy { cursor: default; }
 .fx-fancy .word { white-space: nowrap; }
-.fx-fancy .word.sv { animation: none; opacity: 1; filter: none; transform: none; }
 .sv-l { position: relative; display: inline-block; isolation: isolate; }
-.sv-pending .sv-l { opacity: 0; }
 .sv-l::before, .sv-l::after { content: ""; position: absolute; pointer-events: none; opacity: 0; }
 .sv-l::before { /* the comic panel behind the letter */
   z-index: -1; inset: 0.3em -0.08em 0.2em;
